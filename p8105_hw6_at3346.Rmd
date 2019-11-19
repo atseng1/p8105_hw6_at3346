@@ -28,4 +28,36 @@ theme_set(theme_minimal() + theme(legend.position = "bottom"))
 
 ## Problem 1
 ```{r}
+birthweight_data = 
+  read_csv("./data/birthweight.csv", col_names = TRUE) %>%
+  janitor::clean_names() %>% 
+  mutate(
+  babysex = as.factor(babysex),
+  babysex = recode(
+    babysex, 
+    "1" = "male", 
+    "2" = "female"),
+  frace = as.factor(frace),
+  frace = recode(
+    frace, 
+    "1" = "White", 
+    "2" = "Black", 
+    "3" = "Asian", 
+    "4" = "Puerto Rican", 
+    "8" = "Other", 
+    "9" = "Unknown"), 
+  malform = as.factor(malform),
+  malform = recode(
+    malform,
+    "0" = "absent", 
+    "1" = "present"),
+  mrace = as.factor(mrace),
+  mrace = recode(
+    frace, 
+    "1" = "White", 
+    "2" = "Black", 
+    "3" = "Asian", 
+    "4" = "Puerto Rican", 
+    "8" = "Other", 
+    "9" = "Unknown")) %>% 
 ```
