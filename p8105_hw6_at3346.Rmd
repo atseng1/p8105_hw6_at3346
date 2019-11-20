@@ -95,13 +95,83 @@ birthweight_data %>%
 
 Based on my exploratory analysis of visually inspecting the plots, I will fit a regression model with baby's sex, baby’s head circumference at birth (cm), baby’s length at birth (cm), and gestational age in weeks:
 ```{r prob1.reg1}
-fit = lm(bwt ~ babysex + bhead + blength + gaweeks, data = birthweight_data)
+fit_og = lm(bwt ~ babysex + bhead + blength + gaweeks, data = birthweight_data)
 
-fit %>% 
+fit_og %>% 
   broom::tidy() %>% 
   select(term, estimate, p.value) %>% 
   knitr::kable(digits = 4)
 ```
+
+
+
+```{r prob1.residualsplot}
+birthweight_data %>% 
+  modelr::add_residuals(fit_og) %>% 
+  modelr::add_predictions(fit_og) %>% 
+  ggplot(aes(x = pred, y = resid)) + 
+  geom_point()
+```
+
+
+```{r prob1.maineffects}
+fit_maineff = lm(bwt ~ blength + gaweeks, data = birthweight_data)
+
+fit_maineff %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  knitr::kable(digits = 4)
+
+```
+
+
+
+```{r prob1.interactions}
+fit_int = lm(bwt ~ bhead + blength + babysex + bhead * blength + bhead * babysex + blength * babysex +  bhead * blength * babysex, data = birthweight_data)
+
+fit_int %>%
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  knitr::kable(digits = 4)
+```
+
+
+
+Fit models and obtain RMSE to assess prediction accuracy for different models:
+```{r prob1.CV}
+cv_df = 
+  crossv_mc(birthweight_data, 100) 
+
+cv_df %>% pull(train) %>% .[[1]] %>% as_tibble
+cv_df %>% pull(test) %>% .[[1]] %>% as_tibble
+
+cv_df =
+  cv_df %>% 
+  mutate(
+    train = map(train, as_tibble),
+    test = map(test, as_tibble))
+
+cv_df = 
+  cv_df %>% 
+  mutate(og_mod  = map(train, ~lm(bwt ~ babysex + bhead + blength + gaweeks, data = .x)),
+         maineff_mod  = map(train, ~lm(bwt ~ blength + gaweeks, data = .x)),
+         int_mod  = map(train, ~lm(bwt ~ bhead + blength + babysex + bhead * blength + bhead * babysex + blength * babysex + bhead * blength * babysex, data = .x))) %>% 
+  mutate(rmse_og = map2_dbl(og_mod, test, ~rmse(model = .x, data = .y)),
+         rmse_maineff = map2_dbl(maineff_mod, test, ~rmse(model = .x, data = .y)),
+         rmse_int = map2_dbl(int_mod, test, ~rmse(model = .x, data = .y)))
+
+cv_df %>% 
+  select(starts_with("rmse")) %>% 
+  pivot_longer(
+    everything(),
+    names_to = "model", 
+    values_to = "rmse",
+    names_prefix = "rmse_") %>% 
+  mutate(model = fct_inorder(model)) %>% 
+  ggplot(aes(x = model, y = rmse)) + 
+  geom_violin()
+```
+
 
 
 
