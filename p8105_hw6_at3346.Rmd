@@ -9,6 +9,7 @@ output: github_document
 library(tidyverse)
 library(modelr)
 library(mgcv)
+library(measurements)
 
 knitr::opts_chunk$set(
 	echo = TRUE,
@@ -59,11 +60,63 @@ birthweight_data =
     "3" = "Asian", 
     "4" = "Puerto Rican", 
     "8" = "Other", 
-    "9" = "Unknown"))
+    "9" = "Unknown"),
+  delwt = round(conv_unit(delwt, "lbs", "g"), digits = 0),
+  ppwt = round(conv_unit(ppwt, "lbs", "g"), digits = 0),
+  wtgain = round(conv_unit(wtgain, "lbs", "g"), digits = 0),
+  mheight = round(conv_unit(mheight, "inch", "cm"), digits = 0))
 ```
 
 
-```{r prob1.reg1}
+The variables I hypothesize that underly baby's birthweight include: babysex, bhead, blength, delwt, gaweeks, momage, pnumlbw, and pnumsga. I will plot each of these hypothesized variables against baby's birthweight.
 
+```{r prob1.exploratory}
+birthweight_data %>% 
+  ggplot(aes(x = babysex, y = bwt)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
+
+birthweight_data %>% 
+  ggplot(aes(x = bhead, y = bwt)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
+
+birthweight_data %>% 
+  ggplot(aes(x = blength, y = bwt)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
+
+birthweight_data %>% 
+  ggplot(aes(x = gaweeks, y = bwt)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
+```
+
+
+Based on my exploratory analysis of visually inspecting the plots, I will fit a regression model with baby's sex, baby’s head circumference at birth (cm), baby’s length at birth (cm), and gestational age in weeks:
+```{r prob1.reg1}
+fit = lm(bwt ~ babysex + bhead + blength + gaweeks, data = birthweight_data)
+
+fit %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  knitr::kable(digits = 4)
+```
+
+
+
+## Problem 2
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
 ```
 
