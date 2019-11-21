@@ -27,6 +27,7 @@ scale_fill_discrete = scale_fill_viridis_d
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 ```
 
+
 ## Problem 1
 ```{r prob1.loadtidy}
 birthweight_data = 
@@ -68,7 +69,7 @@ birthweight_data =
 ```
 
 
-The variables I hypothesize that underly baby's birthweight include: babysex, bhead, blength, delwt, gaweeks, momage, pnumlbw, and pnumsga. I will plot each of these hypothesized variables against baby's birthweight.
+The variables I hypothesize that underlie baby's birthweight include: babysex, bhead, blength, delwt, gaweeks, momage, pnumlbw, and pnumsga. I will plot each of these hypothesized variables against baby's birthweight.
 
 ```{r prob1.exploratory}
 birthweight_data %>% 
@@ -87,24 +88,49 @@ birthweight_data %>%
   geom_smooth(method = 'lm')
 
 birthweight_data %>% 
+  ggplot(aes(x = delwt, y = bwt)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
+
+birthweight_data %>% 
   ggplot(aes(x = gaweeks, y = bwt)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
+
+birthweight_data %>% 
+  ggplot(aes(x = momage, y = bwt)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
+
+birthweight_data %>% 
+  ggplot(aes(x = pnumlbw, y = bwt)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
+
+birthweight_data %>% 
+  ggplot(aes(x = pnumsga, y = bwt)) + 
   geom_point() + 
   geom_smooth(method = 'lm')
 ```
 
 
-Based on my exploratory analysis of visually inspecting the plots, I will fit a regression model with baby's sex, baby’s head circumference at birth (cm), baby’s length at birth (cm), and gestational age in weeks:
-```{r prob1.reg1}
+Based on visually inspecting the plots, `delwt`, `momage`, `pnumlbw`, and `pnumsga` do not seem to be linearly associated with baby's birthweight. Hence, I will fit an original regression model for baby's birthweight with baby's sex, baby’s head circumference at birth (cm), baby’s length at birth (cm), and gestational age in weeks.
+```{r prob1.originalreg}
 fit_og = lm(bwt ~ babysex + bhead + blength + gaweeks, data = birthweight_data)
 
 fit_og %>% 
   broom::tidy() %>% 
   select(term, estimate, p.value) %>% 
+  rename(
+    "Term" = "term",
+    "Estimate" = "estimate",
+    "p-value" = "p.value") %>% 
   knitr::kable(digits = 4)
 ```
 
 
 
+Plot of model residuals against fitted values:
 ```{r prob1.residualsplot}
 birthweight_data %>% 
   modelr::add_residuals(fit_og) %>% 
@@ -114,24 +140,34 @@ birthweight_data %>%
 ```
 
 
+Fit a model with length at birth and gestational age (main effects only):
 ```{r prob1.maineffects}
 fit_maineff = lm(bwt ~ blength + gaweeks, data = birthweight_data)
 
 fit_maineff %>% 
   broom::tidy() %>% 
   select(term, estimate, p.value) %>% 
+  rename(
+    "Term" = "term",
+    "Estimate" = "estimate",
+    "p-value" = "p.value") %>% 
   knitr::kable(digits = 4)
 
 ```
 
 
 
+Fit a model with head circumference, length, sex, and all interactions (including the three-way interaction) between these:
 ```{r prob1.interactions}
 fit_int = lm(bwt ~ bhead + blength + babysex + bhead * blength + bhead * babysex + blength * babysex +  bhead * blength * babysex, data = birthweight_data)
 
 fit_int %>%
   broom::tidy() %>% 
   select(term, estimate, p.value) %>% 
+  rename(
+    "Term" = "term",
+    "Estimate" = "estimate",
+    "p-value" = "p.value") %>% 
   knitr::kable(digits = 4)
 ```
 
@@ -190,6 +226,8 @@ weather_df =
   select(name, id, everything())
 ```
 
+
+Writing a bootstrap function to draw repeated samples with replacement:
 ```{r prob2.bootstrap}
 set.seed(8)
 
@@ -200,11 +238,11 @@ boot_func = function(weather_df) {
 boot_samp = 
   tibble(
     strap_number = 1:5000,
-    strap_sample = rerun(5000, boot_func(weather_df))
-  ) 
+    strap_sample = rerun(5000, boot_func(weather_df))) 
 ```
 
 
+Producing estimates and plotting distribution of r^2 values:
 ```{r prob2.rsquared}
 bootstrap_rsquared = 
   boot_samp %>% 
@@ -213,15 +251,22 @@ bootstrap_rsquared =
     results = map(models, broom::glance)) %>% 
   select(-strap_sample, -models) %>% 
   unnest(cols = c(results)) %>% 
-  select(strap_number, r.squared) %>% 
-  ggplot(aes(x = r.squared)) + 
-  geom_density(color = "seagreen")
+  select(strap_number, r.squared) 
 
-bootstrap_rsquared
+bootstrap_rsquared %>% 
+  ggplot(aes(x = r.squared)) + 
+  geom_density(color = "seagreen") +
+  geom_vline(aes(xintercept = mean(r.squared), color = "blue"), linetype = "dashed") +
+  theme(legend.position = "none")
 ```
 
 
+The distribution of the r^2 values is left-skewed. The distribution has a slightly heavy tail extending to low values and a bit of a “shoulder”, features that may be related to the frequency with which large outliers are included in the bootstrap sample.
 
+The 95% confidence interval of r^2 is `r round(quantile(pull(bootstrap_rsquared, r.squared), probs = c(0.025, 0.975)), digits = 2)`.
+
+
+Producing estimates and plotting distribution of log(β0*β1) values:
 ```{r prob2.logbetas}
 bootstrap_logbetas = 
   boot_samp %>% 
@@ -236,12 +281,18 @@ bootstrap_logbetas =
   rename(
     "B0" = "(Intercept)",
     "B1" = "tmin") %>% 
-  mutate(log_betas = log(B0*B1)) %>% 
-  ggplot(aes(x = log_betas)) + 
-  geom_density(color = "seagreen")
+  mutate(log_betas = log(B0*B1)) 
 
-bootstrap_logbetas
+bootstrap_logbetas %>% 
+  ggplot(aes(x = log_betas)) + 
+  geom_density(color = "seagreen") +
+  geom_vline(aes(xintercept = mean(log_betas), color = "blue"), linetype = "dashed") +
+  theme(legend.position = "none")
 ```
 
+
+The distribution of the log(β0*β1) is approximately normal. This is likely due to the log-transformation of the product of β0 and β1 which is often used to transform skewed data to approximately conform to normality.
+
+The 95% confidence interval of log(β0*β1) is `r round(quantile(pull(bootstrap_logbetas, log_betas), probs = c(0.025, 0.975)), digits = 2)`.
 
 
