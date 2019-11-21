@@ -176,7 +176,7 @@ cv_df %>%
 
 
 ## Problem 2
-```{r}
+```{r prob2.load}
 weather_df = 
   rnoaa::meteo_pull_monitors(
     c("USW00094728"),
@@ -189,4 +189,59 @@ weather_df =
     tmax = tmax / 10) %>%
   select(name, id, everything())
 ```
+
+```{r prob2.bootstrap}
+set.seed(8)
+
+boot_func = function(weather_df) {
+  sample_frac(weather_df, replace = TRUE)
+}
+
+boot_samp = 
+  tibble(
+    strap_number = 1:5000,
+    strap_sample = rerun(5000, boot_func(weather_df))
+  ) 
+```
+
+
+```{r prob2.rsquared}
+bootstrap_rsquared = 
+  boot_samp %>% 
+  mutate(
+    models = map(strap_sample, ~lm(tmax ~ tmin, data = .x) ),
+    results = map(models, broom::glance)) %>% 
+  select(-strap_sample, -models) %>% 
+  unnest(cols = c(results)) %>% 
+  select(strap_number, r.squared) %>% 
+  ggplot(aes(x = r.squared)) + 
+  geom_density(color = "seagreen")
+
+bootstrap_rsquared
+```
+
+
+
+```{r prob2.logbetas}
+bootstrap_logbetas = 
+  boot_samp %>% 
+  mutate(
+    models = map(strap_sample, ~lm(tmax ~ tmin, data = .x)),
+    results = map(models, broom::tidy)) %>% 
+  unnest(cols = c(results)) %>% 
+  select(strap_number, term, estimate) %>% 
+  pivot_wider(
+    names_from = term,
+    values_from = estimate) %>% 
+  rename(
+    "B0" = "(Intercept)",
+    "B1" = "tmin") %>% 
+  mutate(log_betas = log(B0*B1)) %>% 
+  ggplot(aes(x = log_betas)) + 
+  geom_density(color = "seagreen")
+
+bootstrap_logbetas
+```
+
+
 
