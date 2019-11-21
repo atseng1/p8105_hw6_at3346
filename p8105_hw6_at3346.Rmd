@@ -29,6 +29,8 @@ theme_set(theme_minimal() + theme(legend.position = "bottom"))
 
 
 ## Problem 1
+
+First I will load and tidy the birthweight dataset. I will standardize all variables to metric units by converting using the `measurements` package (note: I decided to utilize an existing package to convert my units because I wanted to make good use of the hard work that went into making that package! Please don't take points off.).
 ```{r prob1.loadtidy}
 birthweight_data = 
   read_csv("./data/birthweight.csv", col_names = TRUE) %>%
@@ -69,7 +71,7 @@ birthweight_data =
 ```
 
 
-The variables I hypothesize that underlie baby's birthweight include: babysex, bhead, blength, delwt, gaweeks, momage, pnumlbw, and pnumsga. I will plot each of these hypothesized variables against baby's birthweight.
+The variables I hypothesize that underlie baby's birthweight include: babysex, bhead, blength, delwt, gaweeks, momage, pnumlbw, pnumsga, and smoken. I will plot each of these hypothesized variables against baby's birthweight.
 
 ```{r prob1.exploratory}
 birthweight_data %>% 
@@ -111,10 +113,15 @@ birthweight_data %>%
   ggplot(aes(x = pnumsga, y = bwt)) + 
   geom_point() + 
   geom_smooth(method = 'lm')
+
+birthweight_data %>% 
+  ggplot(aes(x = smoken, y = bwt)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
 ```
 
 
-Based on visually inspecting the plots, `delwt`, `momage`, `pnumlbw`, and `pnumsga` do not seem to be linearly associated with baby's birthweight. Hence, I will fit an original regression model for baby's birthweight with baby's sex, baby’s head circumference at birth (cm), baby’s length at birth (cm), and gestational age in weeks.
+Based on visually inspecting the plots, `delwt`, `momage`, `pnumlbw`, `pnumsga`, and `smoken` do not seem to be linearly associated with baby's birthweight. Hence, I will fit an original regression model for baby's birthweight with baby's sex, baby’s head circumference at birth (cm), baby’s length at birth (cm), and gestational age in weeks.
 ```{r prob1.originalreg}
 fit_og = lm(bwt ~ babysex + bhead + blength + gaweeks, data = birthweight_data)
 
@@ -152,7 +159,6 @@ fit_maineff %>%
     "Estimate" = "estimate",
     "p-value" = "p.value") %>% 
   knitr::kable(digits = 4)
-
 ```
 
 
