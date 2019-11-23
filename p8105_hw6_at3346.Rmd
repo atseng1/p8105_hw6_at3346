@@ -71,48 +71,155 @@ birthweight_data =
 ```
 
 
-The variables I hypothesize that underlie baby's birthweight include: babysex, bhead, blength, delwt, gaweeks, momage, pnumlbw, pnumsga, and smoken. I will plot each of these hypothesized variables against baby's birthweight.
+The variables I hypothesize that underlie baby's birthweight include: babysex, bhead, blength, delwt, gaweeks, momage, pnumlbw, pnumsga, and smoken. First, I will run bivariate analyses for each hypothesized variable to check for statistical significance of the independent association with the outcome of baby's birthweight. Then, I will plot each of these hypothesized variables against baby's birthweight to check for linear association visually.
 
 ```{r prob1.exploratory}
+uni_babysex = lm(bwt ~ babysex, data = birthweight_data)
+
+uni_babysex %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  rename(
+    "Term" = "term",
+    "Estimate" = "estimate",
+    "p-value" = "p.value") %>% 
+  knitr::kable(digits = 5)
+
 birthweight_data %>% 
   ggplot(aes(x = babysex, y = bwt)) + 
   geom_point() + 
   geom_smooth(method = 'lm')
+
+
+uni_bhead = lm(bwt ~ bhead, data = birthweight_data)
+
+uni_bhead %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  rename(
+    "Term" = "term",
+    "Estimate" = "estimate",
+    "p-value" = "p.value") %>% 
+  knitr::kable(digits = 5)
 
 birthweight_data %>% 
   ggplot(aes(x = bhead, y = bwt)) + 
   geom_point() + 
   geom_smooth(method = 'lm')
 
+
+uni_blength = lm(bwt ~ blength, data = birthweight_data)
+
+uni_blength %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  rename(
+    "Term" = "term",
+    "Estimate" = "estimate",
+    "p-value" = "p.value") %>% 
+  knitr::kable(digits = 5)
+
 birthweight_data %>% 
   ggplot(aes(x = blength, y = bwt)) + 
   geom_point() + 
   geom_smooth(method = 'lm')
+
+
+uni_delwt = lm(bwt ~ delwt, data = birthweight_data)
+
+uni_delwt %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  rename(
+    "Term" = "term",
+    "Estimate" = "estimate",
+    "p-value" = "p.value") %>% 
+  knitr::kable(digits = 5)
 
 birthweight_data %>% 
   ggplot(aes(x = delwt, y = bwt)) + 
   geom_point() + 
   geom_smooth(method = 'lm')
 
+
+uni_gaweeks = lm(bwt ~ gaweeks, data = birthweight_data)
+
+uni_gaweeks %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  rename(
+    "Term" = "term",
+    "Estimate" = "estimate",
+    "p-value" = "p.value") %>% 
+  knitr::kable(digits = 5)
+
 birthweight_data %>% 
   ggplot(aes(x = gaweeks, y = bwt)) + 
   geom_point() + 
   geom_smooth(method = 'lm')
+
+
+uni_momage = lm(bwt ~ momage, data = birthweight_data)
+
+uni_momage %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  rename(
+    "Term" = "term",
+    "Estimate" = "estimate",
+    "p-value" = "p.value") %>% 
+  knitr::kable(digits = 5)
 
 birthweight_data %>% 
   ggplot(aes(x = momage, y = bwt)) + 
   geom_point() + 
   geom_smooth(method = 'lm')
 
+
+uni_pnumlbw = lm(bwt ~ pnumlbw, data = birthweight_data)
+
+uni_pnumlbw %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  rename(
+    "Term" = "term",
+    "Estimate" = "estimate",
+    "p-value" = "p.value") %>% 
+  knitr::kable(digits = 5)
+
 birthweight_data %>% 
   ggplot(aes(x = pnumlbw, y = bwt)) + 
   geom_point() + 
   geom_smooth(method = 'lm')
 
+
+uni_pnumsga = lm(bwt ~ pnumsga, data = birthweight_data)
+
+uni_pnumsga %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  rename(
+    "Term" = "term",
+    "Estimate" = "estimate",
+    "p-value" = "p.value") %>% 
+  knitr::kable(digits = 5)
+
 birthweight_data %>% 
   ggplot(aes(x = pnumsga, y = bwt)) + 
   geom_point() + 
   geom_smooth(method = 'lm')
+
+
+uni_smoken = lm(bwt ~ smoken, data = birthweight_data)
+
+uni_smoken %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  rename(
+    "Term" = "term",
+    "Estimate" = "estimate",
+    "p-value" = "p.value") %>% 
+  knitr::kable(digits = 5)
 
 birthweight_data %>% 
   ggplot(aes(x = smoken, y = bwt)) + 
@@ -121,7 +228,7 @@ birthweight_data %>%
 ```
 
 
-Based on visually inspecting the plots, `delwt`, `momage`, `pnumlbw`, `pnumsga`, and `smoken` do not seem to be linearly associated with baby's birthweight. Hence, I will fit an original regression model for baby's birthweight with baby's sex, baby’s head circumference at birth (cm), baby’s length at birth (cm), and gestational age in weeks.
+All variables were found to be independently significantly associated with baby's birthweight. Based on visually inspecting the plots, `delwt`, `momage`, `pnumlbw`, `pnumsga`, and `smoken` do not seem to be linearly associated with baby's birthweight. Hence, I will fit an original regression model for baby's birthweight with baby's sex, baby’s head circumference at birth (cm), baby’s length at birth (cm), and gestational age in weeks.
 ```{r prob1.originalreg}
 fit_og = lm(bwt ~ babysex + bhead + blength + gaweeks, data = birthweight_data)
 
@@ -132,7 +239,7 @@ fit_og %>%
     "Term" = "term",
     "Estimate" = "estimate",
     "p-value" = "p.value") %>% 
-  knitr::kable(digits = 4)
+  knitr::kable(digits = 3)
 ```
 
 
@@ -158,7 +265,7 @@ fit_maineff %>%
     "Term" = "term",
     "Estimate" = "estimate",
     "p-value" = "p.value") %>% 
-  knitr::kable(digits = 4)
+  knitr::kable(digits = 3)
 ```
 
 
@@ -174,7 +281,7 @@ fit_int %>%
     "Term" = "term",
     "Estimate" = "estimate",
     "p-value" = "p.value") %>% 
-  knitr::kable(digits = 4)
+  knitr::kable(digits = 3)
 ```
 
 
@@ -269,7 +376,7 @@ bootstrap_rsquared %>%
 
 The distribution of the r^2 values is left-skewed. The distribution has a slightly heavy tail extending to low values and a bit of a “shoulder”, features that may be related to the frequency with which large outliers are included in the bootstrap sample.
 
-The 95% confidence interval of r^2 is `r round(quantile(pull(bootstrap_rsquared, r.squared), probs = c(0.025, 0.975)), digits = 2)`.
+The 95% confidence interval of r^2 based on the 2.5% and 97.5% quantiles is (`r round(quantile(pull(bootstrap_rsquared, r.squared), probs = c(0.025, 0.975)), digits = 2)`).
 
 
 Producing estimates and plotting distribution of log(β0*β1) values:
@@ -299,6 +406,6 @@ bootstrap_logbetas %>%
 
 The distribution of the log(β0*β1) is approximately normal. This is likely due to the log-transformation of the product of β0 and β1 which is often used to transform skewed data to approximately conform to normality.
 
-The 95% confidence interval of log(β0*β1) is `r round(quantile(pull(bootstrap_logbetas, log_betas), probs = c(0.025, 0.975)), digits = 2)`.
+The 95% confidence interval of log(β0*β1) based on the 2.5% and 97.5% quantiles is (`r round(quantile(pull(bootstrap_logbetas, log_betas), probs = c(0.025, 0.975)), digits = 2)`).
 
 
